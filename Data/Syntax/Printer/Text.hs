@@ -18,6 +18,7 @@ module Data.Syntax.Printer.Text (
     where
 
 import           Control.Category
+import           Control.Category.Structures
 import           Control.Monad
 import           Control.SIArrow
 import           Data.Syntax
@@ -33,7 +34,7 @@ import           Prelude hiding (id, (.))
 
 -- | Prints a value to a Text Builder using a syntax description.
 newtype Printer a b = Printer { getConsumer :: Consumer Builder a b }
-    deriving (Category, Products, Coproducts, CategoryPlus, SIArrow)
+    deriving (Category, Products, Coproducts, CatPlus, SIArrow)
 
 wrap :: (b -> Either String Builder) -> Printer () b
 wrap f = Printer $ Consumer $ \b -> fmap (, ()) (f b)

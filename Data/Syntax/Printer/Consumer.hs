@@ -13,6 +13,7 @@ module Data.Syntax.Printer.Consumer where
 
 import Control.Applicative
 import Control.Category
+import Control.Category.Structures
 import Control.Lens.SemiIso
 import Control.Monad
 import Control.SIArrow
@@ -39,7 +40,7 @@ instance Monoid m => Products (Consumer m) where
 instance Monoid m => Coproducts (Consumer m) where
     Consumer f +++ Consumer g = Consumer $ fmap bisequenceA . bimapM f g
 
-instance Monoid m => CategoryPlus (Consumer m) where
+instance Monoid m => CatPlus (Consumer m) where
     cempty = Consumer (const (Left "cempty"))
     Consumer f /+/ Consumer g = Consumer $ \c -> f c <|> g c
 
