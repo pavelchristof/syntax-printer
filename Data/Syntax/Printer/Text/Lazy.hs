@@ -17,10 +17,12 @@ module Data.Syntax.Printer.Text.Lazy (
     )
     where
 
+import           Control.Arrow (Kleisli(..))
 import           Control.Category
 import           Control.Category.Structures
 import           Control.Monad
 import           Control.SIArrow
+import           Data.Semigroupoid.Dual
 import           Data.Syntax
 import           Data.Syntax.Char
 import           Data.Syntax.Printer.Consumer
@@ -30,14 +32,18 @@ import           Data.Text.Lazy.Builder
 import qualified Data.Text.Lazy.Builder.Int as B
 import qualified Data.Text.Lazy.Builder.RealFloat as B
 import qualified Data.Text.Lazy.Builder.Scientific as B
+import qualified Data.Vector as V
 import           Prelude hiding (id, (.))
 
 -- | Prints a value to a Text Builder using a syntax description.
-newtype Printer a b = Printer { getConsumer :: Consumer Builder a b }
+newtype Printer a b = Printer { unPrinter :: Dual (Kleisli (Consumer Builder)) a b }
     deriving (Category, Products, Coproducts, CatPlus, SIArrow)
 
 wrap :: (b -> Either String Builder) -> Printer () b
-wrap f = Printer $ Consumer $ \b -> fmap (, ()) (f b)
+wrap f = Printer $ Dual $ Kleisli $ (Consumer . fmap (, ())) . f
+
+unwrap :: Printer a b -> b -> Consumer Builder a
+unwrap = runKleisli . getDual . unPrinter
 
 instance Syntax Printer where
     type Seq Printer = Text
@@ -50,6 +56,12 @@ instance Syntax Printer where
     takeTill1 p = wrap $ Right . fromLazyText <=< notNull . T.takeWhile (not . p)
       where notNull t | T.null t  = Left "takeTill1 failed"
                       | otherwise = Right t
+    vecN n e = wrap $ \v -> if V.length v == n
+                               then fmap fst $ runConsumer (V.mapM_ (unwrap e) v)
+                               else Left "vecN: invalid vector size"
+    ivecN n e = wrap $ \v -> if V.length v == n
+                                then fmap fst $ runConsumer (V.mapM_ (unwrap e) (V.indexed v))
+                                else Left "ivecN: invalid vector size"
 
 instance SyntaxChar Printer where
     decimal = wrap $ Right . B.decimal
@@ -59,8 +71,8 @@ instance SyntaxChar Printer where
 
 -- | Runs the printer.
 runPrinter :: Printer a b -> b -> Either String (Builder, a)
-runPrinter = runConsumer . getConsumer
+runPrinter = (runConsumer .) . runKleisli . getDual . unPrinter
 
 -- | Runs the printer and discards the result.
 runPrinter_ :: Printer a b -> b -> Either String Builder
-runPrinter_ = (fmap fst .) . runConsumer . getConsumer
+runPrinter_ = (fmap fst .) . runPrinter
