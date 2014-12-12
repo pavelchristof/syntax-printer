@@ -22,6 +22,7 @@ import           Control.Category
 import           Control.Category.Structures
 import           Control.Monad
 import           Control.SIArrow
+import           Data.Monoid (mempty)
 import           Data.Semigroupoid.Dual
 import           Data.Syntax
 import           Data.Syntax.Char
@@ -69,6 +70,10 @@ instance Syntax Printer where
     uivecN n e = wrap $ \v -> if VU.length v == n
                                  then fmap fst $ runConsumer (VU.mapM_ (unwrap e) (VU.indexed v))
                                  else Left "uivecN: invalid vector size"
+
+instance Isolable Printer where
+    isolate p = Printer $ Dual $ Kleisli $
+        Consumer . fmap ((mempty, ) . toLazyText) . runPrinter_ p
 
 instance SyntaxChar Printer where
     decimal = wrap $ Right . B.decimal

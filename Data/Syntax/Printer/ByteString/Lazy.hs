@@ -25,6 +25,7 @@ import           Control.SIArrow
 import           Data.ByteString.Lazy (ByteString)
 import qualified Data.ByteString.Lazy as BS
 import           Data.ByteString.Lazy.Builder
+import           Data.Monoid (mempty)
 import           Data.Semigroupoid.Dual
 import           Data.Syntax
 import           Data.Syntax.Printer.Consumer
@@ -65,6 +66,10 @@ instance Syntax Printer where
     uivecN n e = wrap $ \v -> if VU.length v == n
                                  then fmap fst $ runConsumer (VU.mapM_ (unwrap e) (VU.indexed v))
                                  else Left "uivecN: invalid vector size"
+
+instance Isolable Printer where
+    isolate p = Printer $ Dual $ Kleisli $
+        Consumer . fmap ((mempty, ) . toLazyByteString) . runPrinter_ p
 
 -- | Runs the printer.
 runPrinter :: Printer a b -> b -> Either String (Builder, a)

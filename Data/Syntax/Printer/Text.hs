@@ -22,12 +22,14 @@ import           Control.Category
 import           Control.Category.Structures
 import           Control.Monad
 import           Control.SIArrow
+import           Data.Monoid (mempty)
 import           Data.Semigroupoid.Dual
 import           Data.Syntax
 import           Data.Syntax.Char
 import           Data.Syntax.Printer.Consumer
 import           Data.Text (Text)
 import qualified Data.Text as T
+import           Data.Text.Lazy (toStrict)
 import           Data.Text.Lazy.Builder
 import qualified Data.Text.Lazy.Builder.Int as B
 import qualified Data.Text.Lazy.Builder.RealFloat as B
@@ -69,6 +71,10 @@ instance Syntax Printer where
     uivecN n e = wrap $ \v -> if VU.length v == n
                                  then fmap fst $ runConsumer (VU.mapM_ (unwrap e) (VU.indexed v))
                                  else Left "uivecN: invalid vector size"
+
+instance Isolable Printer where
+    isolate p = Printer $ Dual $ Kleisli $
+        Consumer . fmap ((mempty, ) . toStrict . toLazyText) . runPrinter_ p
 
 instance SyntaxChar Printer where
     decimal = wrap $ Right . B.decimal
