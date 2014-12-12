@@ -33,6 +33,7 @@ import qualified Data.Text.Lazy.Builder.Int as B
 import qualified Data.Text.Lazy.Builder.RealFloat as B
 import qualified Data.Text.Lazy.Builder.Scientific as B
 import qualified Data.Vector as V
+import qualified Data.Vector.Unboxed as VU
 import           Prelude hiding (id, (.))
 
 -- | Prints a value to a Text Builder using a syntax description.
@@ -62,6 +63,12 @@ instance Syntax Printer where
     ivecN n e = wrap $ \v -> if V.length v == n
                                 then fmap fst $ runConsumer (V.mapM_ (unwrap e) (V.indexed v))
                                 else Left "ivecN: invalid vector size"
+    uvecN n e = wrap $ \v -> if VU.length v == n
+                                then fmap fst $ runConsumer (VU.mapM_ (unwrap e) v)
+                                else Left "uvecN: invalid vector size"
+    uivecN n e = wrap $ \v -> if VU.length v == n
+                                 then fmap fst $ runConsumer (VU.mapM_ (unwrap e) (VU.indexed v))
+                                 else Left "uivecN: invalid vector size"
 
 instance SyntaxChar Printer where
     decimal = wrap $ Right . B.decimal

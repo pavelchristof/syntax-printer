@@ -12,7 +12,6 @@ module Data.Syntax.Printer.Consumer where
 
 import Control.Applicative
 import Control.Monad
-import Control.Monad.Trans.Error ()
 import Data.Bifunctor.Apply
 import Data.Monoid
 
@@ -25,8 +24,12 @@ instance Monoid m => Applicative (Consumer m) where
     f <*> x = Consumer $ bilift2 (<>) ($) <$> runConsumer f <*> runConsumer x
 
 instance Monoid m => Alternative (Consumer m) where
-    empty = Consumer $ empty
-    f <|> g = Consumer $ runConsumer f <|> runConsumer g
+    empty = Consumer $ Left "empty"
+    f <|> g = Consumer $ case runConsumer f of
+                           Left _ -> case runConsumer g of
+                                       Left e2 -> Left e2
+                                       Right x -> Right x
+                           Right x -> Right x
 
 instance Monoid m => Monad (Consumer m) where
     return = pure

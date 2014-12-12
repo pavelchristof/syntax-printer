@@ -29,6 +29,7 @@ import           Data.Semigroupoid.Dual
 import           Data.Syntax
 import           Data.Syntax.Printer.Consumer
 import qualified Data.Vector as V
+import qualified Data.Vector.Unboxed as VU
 import           Prelude hiding (id, (.))
 
 -- | Prints a value to a ByteString Builder using a syntax description.
@@ -58,6 +59,12 @@ instance Syntax Printer where
     ivecN n e = wrap $ \v -> if V.length v == n
                                 then fmap fst $ runConsumer (V.mapM_ (unwrap e) (V.indexed v))
                                 else Left "ivecN: invalid vector size"
+    uvecN n e = wrap $ \v -> if VU.length v == n
+                                then fmap fst $ runConsumer (VU.mapM_ (unwrap e) v)
+                                else Left "uvecN: invalid vector size"
+    uivecN n e = wrap $ \v -> if VU.length v == n
+                                 then fmap fst $ runConsumer (VU.mapM_ (unwrap e) (VU.indexed v))
+                                 else Left "uivecN: invalid vector size"
 
 -- | Runs the printer.
 runPrinter :: Printer a b -> b -> Either String (Builder, a)

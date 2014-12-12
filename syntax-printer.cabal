@@ -17,7 +17,6 @@ library
                        Data.Syntax.Printer.ByteString
                        Data.Syntax.Printer.ByteString.Lazy
   build-depends:       base >=4.7 && <4.8, semi-iso >= 1, syntax >= 1,
-                       text, bytestring, scientific >= 0.3, bifunctors, semigroupoids, transformers,
-                       vector
+                       text, bytestring, scientific >= 0.3, bifunctors, semigroupoids, vector
   default-language:    Haskell2010
   ghc-options:         -Wall
