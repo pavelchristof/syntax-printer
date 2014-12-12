@@ -21,7 +21,7 @@ newtype Consumer m a = Consumer { runConsumer :: Either String (m, a) }
 
 instance Monoid m => Applicative (Consumer m) where
     pure x = Consumer $ Right (mempty, x)
-    f <*> x = Consumer $ bilift2 (<>) ($) <$> runConsumer f <*> runConsumer x
+    f <*> x = Consumer $ bilift2 (flip (<>)) ($) <$> runConsumer f <*> runConsumer x
 
 instance Monoid m => Alternative (Consumer m) where
     empty = Consumer $ Left "empty"
@@ -36,7 +36,7 @@ instance Monoid m => Monad (Consumer m) where
     m >>= f = Consumer $ do
         (m1, x) <- runConsumer m
         (m2, y) <- runConsumer (f x)
-        return (m1 <> m2, y)
+        return (m2 <> m1, y)
     fail = Consumer . Left
 
 instance Monoid m => MonadPlus (Consumer m) where
