@@ -37,6 +37,7 @@ instance Monoid m => Monad (Consumer m) where
         (m1, x) <- runConsumer m
         (m2, y) <- runConsumer (f x)
         return (m1 <> m2, y)
+    fail = Consumer . Left
 
 instance Monoid m => MonadPlus (Consumer m) where
     mzero = empty
