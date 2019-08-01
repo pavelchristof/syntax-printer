@@ -1,5 +1,5 @@
 name:                syntax-printer
-version:             1.0.0.0
+version:             1.0.0.1
 synopsis:            Text and ByteString printers for 'syntax'.
 license:             MIT
 license-file:        LICENSE
